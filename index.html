@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FeiraVerde Digital - Gestão de Troca Recicláveis por Alimentos</title>
+  <meta name="description" content="Plataforma de Gestão do Programa Feira Verde: troca de materiais recicláveis por alimentos frescos, controle de rotas de caminhões e hortifrúti em tempo real.">
+  
+  <!-- Fontes do Google & Ícones FontAwesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Estilos CSS -->
+  <link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+
+  <!-- Navegação Superior do Cabeçalho -->
+  <header class="app-header">
+    <div class="header-container">
+      <a href="#" class="brand-logo">
+        <div class="brand-icon">
+          <i class="fa-solid fa-leaf"></i>
+        </div>
+        <div>
+          <div class="brand-title">FeiraVerde <span>Digital</span></div>
+          <div class="brand-badge">Gestão Pública</div>
+        </div>
+      </a>
+
+      <!-- Seletor de Perfil do Usuário -->
+      <nav class="role-nav">
+        <button class="role-btn active" data-role="admin">
+          <i class="fa-solid fa-chart-line"></i> Painel Gestor
+        </button>
+        <button class="role-btn" data-role="operator">
+          <i class="fa-solid fa-truck-front"></i> PDV Caminhão
+        </button>
+        <button class="role-btn" data-role="citizen">
+          <i class="fa-solid fa-user-group"></i> Portal Cidadão
+        </button>
+        <button class="role-btn" data-role="producer">
+          <i class="fa-solid fa-tractor"></i> Produtor Rural
+        </button>
+      </nav>
+
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span class="gov-badge">
+          <i class="fa-solid fa-shield-halved"></i> Conectado Gov.br
+        </span>
+        <button class="btn btn-secondary btn-sm" onclick="window.appState.resetar(); window.utilitarios.mostrarNotificacao('Dados reinicializados!', 'info');" title="Resetar Banco de Dados Simulado">
+          <i class="fa-solid fa-rotate-left"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Conteêiner da Visão Principal -->
+  <main class="main-content">
+    <div id="view-container">
+      <!-- Visões dinâmicas renderizadas via JS -->
+    </div>
+  </main>
+
+  <!-- Modal Pop-up: Visualização do Comprovante -->
+  <div class="modal-overlay" id="receipt-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 style="margin:0; font-size:1.2rem; color:var(--cor-primaria);"><i class="fa-solid fa-receipt"></i> Comprovante Digital da Troca</h3>
+        <button class="modal-close" onclick="window.utilitarios.fecharModal('receipt-modal')">&times;</button>
+      </div>
+      <div id="receipt-modal-content">
+        <!-- Conteúdo do Recibo HTML -->
+      </div>
+      <div style="margin-top:20px; display:flex; justify-content:flex-end; gap:10px;">
+        <button class="btn btn-secondary" onclick="window.print()">
+          <i class="fa-solid fa-print"></i> Imprimir Recibo
+        </button>
+        <button class="btn btn-primary" onclick="window.utilitarios.fecharModal('receipt-modal')">
+          Concluir
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Pop-up: Alteração de Status da Rota -->
+  <div class="modal-overlay" id="status-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 style="margin:0; font-size:1.2rem; color:var(--cor-primaria);"><i class="fa-solid fa-pen-to-square"></i> Alterar Status do Atendimento da Rota</h3>
+        <button class="modal-close" onclick="window.utilitarios.fecharModal('status-modal')">&times;</button>
+      </div>
+      <div>
+        <p style="font-size:0.85rem; color:var(--cor-texto-secundario); margin-bottom:16px;">
+          Selecione o novo status da rota do caminhão <strong id="status-modal-truck-id"></strong> para atualização no mapa dos cidadãos.
+        </p>
+
+        <div class="form-group">
+          <label class="form-label">Novo Status da Rota</label>
+          <select id="status-select-input" class="form-control">
+            <option value="EM_ANDAMENTO">Em Rota / No Ponto Agora</option>
+            <option value="ATRASADO_CHUVA">Pausado por Chuva / Temporal</option>
+            <option value="AGENDADO">Agendado / Próxima Parada</option>
+            <option value="CONCLUIDO">Atendimento Concluído</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-top:20px; display:flex; justify-content:flex-end; gap:10px;">
+        <button class="btn btn-secondary" onclick="window.utilitarios.fecharModal('status-modal')">Cancelar</button>
+        <button class="btn btn-primary" onclick="window.componenteAdmin.confirmarMudancaStatus()">
+          <i class="fa-solid fa-floppy-disk"></i> Salvar Novo Status
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Pop-up: Emissão de Alerta Urgente de Suprimentos -->
+  <div class="modal-overlay" id="alert-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 style="margin:0; font-size:1.2rem; color:var(--cor-destaque);"><i class="fa-solid fa-bullhorn"></i> Emitir Alerta de Demanda Urgente de Hortifrúti</h3>
+        <button class="modal-close" onclick="window.utilitarios.fecharModal('alert-modal')">&times;</button>
+      </div>
+      <div>
+        <p style="font-size:0.85rem; color:var(--cor-texto-secundario); margin-bottom:16px;">
+          Selecione o produto que está em escassez nos caminhões ou no almoxarifado central. Este alerta será transmitido imediatamente para o portal dos Produtores Rurais e Cooperativas.
+        </p>
+
+        <div class="form-group">
+          <label class="form-label">Produto Necessário em Urgência</label>
+          <select id="alert-food-select" class="form-control">
+            <option value="tomate">Tomate Orgânico</option>
+            <option value="batata">Batata Inglesa</option>
+            <option value="cenoura" selected>Cenoura Fresca</option>
+            <option value="alface">Alface Crespa (Maço)</option>
+            <option value="maca">Maçã Gala</option>
+            <option value="ovos">Ovos Caipira (Dúzia)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Quantidade Solicitada (kg)</label>
+          <input type="number" id="alert-qty-input" class="form-control" value="400" min="10">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Motivo da Urgência / Instrução para os Produtores</label>
+          <textarea id="alert-msg-input" class="form-control" rows="3">Alta demanda no ponto de Uvaranas e Cará-Cará. Necessário reabastecimento do almoxarifado até as 17:00 de hoje.</textarea>
+        </div>
+      </div>
+
+      <div style="margin-top:20px; display:flex; justify-content:flex-end; gap:10px;">
+        <button class="btn btn-secondary" onclick="window.utilitarios.fecharModal('alert-modal')">Cancelar</button>
+        <button class="btn btn-warning" style="background:linear-gradient(135deg, #f59e0b, #d97706); color:#fff;" onclick="window.componenteAdmin.enviarAlertaUrgente()">
+          <i class="fa-solid fa-paper-plane"></i> Disparar Alerta para os Produtores
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts JavaScript -->
+  <script src="js/estado.js"></script>
+  <script src="js/utilitarios.js"></script>
+  <script src="js/components/admin.js"></script>
+  <script src="js/components/operador.js"></script>
+  <script src="js/components/cidadao.js"></script>
+  <script src="js/components/produtor.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
