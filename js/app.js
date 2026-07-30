@@ -1,5 +1,3 @@
-/* FeiraVerde Digital - Controlador Principal da Aplicação */
-
 document.addEventListener('DOMContentLoaded', () => {
   // Inscrever a interface do usuário nas atualizações de estado
   window.appState.inscrever((banco) => {
@@ -11,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
   botoesPerfil.forEach(botao => {
     botao.addEventListener('click', () => {
       const perfilAlvo = botao.getAttribute('data-role');
-      
+
       botoesPerfil.forEach(b => b.classList.remove('active'));
       botao.classList.add('active');
 
