@@ -1,122 +1,133 @@
-import React, { useState } from 'react';
-import { appState } from '../estado';
+import React, { useMemo, useState } from 'react';
+import { appState, cargaPorProduto, creditoDeReciclaveis } from '../estado';
 import { utilitarios } from '../utilitarios';
 
+const zerado = (ids) => Object.fromEntries(ids.map((id) => [id, 0]));
+
 export function OperadorComponent({ banco, onFinalizarTransacao }) {
-  const [idCaminhaoSelecionado, setIdCaminhaoSelecionado] = useState('CAM-01');
-  const [cpfCidadao, setCpfCidadao] = useState('123.456.789-00');
-  const [reciclaveis, setReciclaveis] = useState({ plastico: 0, papelao: 0, vidro: 0, metal: 0, oleo: 0, pneu: 0 });
-  const [alimentosRetirados, setAlimentosRetirados] = useState({ tomate: 0, batata: 0, cenoura: 0, maca: 0, alface: 0, ovos: 0 });
+  const [idCaminhaoSelecionado, setIdCaminhaoSelecionado] = useState(
+    () => banco.caminhoes[0]?.id || ''
+  );
+  const [cpfCidadao, setCpfCidadao] = useState(() => banco.cidadaos[0]?.cpf || '');
 
-  const caminhaoAtual = banco.caminhoes.find(t => t.id === idCaminhaoSelecionado) || banco.caminhoes[0];
-  const cidadao = banco.cidadaos.find(c => c.cpf === cpfCidadao) || banco.cidadaos[0];
+  const [reciclaveis, setReciclaveis] = useState(() => zerado(banco.materiais.map((m) => m.id)));
+  const [retiradas, setRetiradas] = useState(() => zerado(banco.produtos.map((p) => p.id)));
 
-  let kgAlimentoGerado = 0;
-  Object.entries(reciclaveis).forEach(([id, qtd]) => {
-    const taxa = banco.taxasConversao.find(r => r.id === id);
-    if (taxa && taxa.kgPorKgAlimento > 0) {
-      kgAlimentoGerado += (qtd / taxa.kgPorKgAlimento);
-    }
-  });
+  const caminhaoAtual =
+    banco.caminhoes.find((t) => t.id === idCaminhaoSelecionado) || banco.caminhoes[0] || null;
+  const cidadao = banco.cidadaos.find((c) => c.cpf === cpfCidadao) || banco.cidadaos[0] || null;
 
-  let kgAlimentoGasto = 0;
-  Object.values(alimentosRetirados).forEach(qtd => {
-    kgAlimentoGasto += qtd;
-  });
+  const carga = useMemo(
+    () => (caminhaoAtual ? cargaPorProduto(banco, caminhaoAtual.id) : {}),
+    [banco, caminhaoAtual]
+  );
 
-  const saldoLiquidoDisponivel = Math.max(0, (cidadao.saldoAlimentoKg + kgAlimentoGerado) - kgAlimentoGasto);
+  const kgAlimentoGerado = creditoDeReciclaveis(banco, reciclaveis);
+  const kgAlimentoGasto = Object.values(retiradas).reduce((s, v) => s + v, 0);
 
-  const handleAtualizarPeso = (idTaxa, val) => {
-    const num = parseFloat(val) || 0;
-    setReciclaveis(prev => ({ ...prev, [idTaxa]: num }));
+  if (!caminhaoAtual || !cidadao) {
+    return (
+      <div className="card">
+        <p style={{ color: 'var(--cor-texto-secundario)' }}>
+          É preciso ao menos um caminhão e um munícipe cadastrados para operar o PDV.
+        </p>
+      </div>
+    );
+  }
+
+  const saldoDisponivel = Math.max(
+    0,
+    cidadao.saldoAlimentoKg + kgAlimentoGerado - kgAlimentoGasto
+  );
+
+  const handleAtualizarPeso = (idMaterial, val) => {
+    setReciclaveis((prev) => ({ ...prev, [idMaterial]: Math.max(0, parseFloat(val) || 0) }));
   };
 
-  const handleAlterarQtdAlimento = (idAlimento, delta) => {
-    const atual = alimentosRetirados[idAlimento] || 0;
-    const proximoValor = Math.max(0, atual + delta);
-    const disponivelNoCaminhao = caminhaoAtual.estoqueAlimentosKg[idAlimento] || 0;
+  const handleAlterarRetirada = (idProduto, delta) => {
+    const atual = retiradas[idProduto] || 0;
+    const proximo = Math.max(0, atual + delta);
+    const disponivelNoCaminhao = carga[idProduto] || 0;
 
-    if (proximoValor > disponivelNoCaminhao) {
-      utilitarios.mostrarNotificacao(`Estoque insuficiente! (Disponível: ${disponivelNoCaminhao}kg)`, 'danger');
+    if (proximo > disponivelNoCaminhao) {
+      utilitarios.mostrarNotificacao(
+        `Estoque do caminhão insuficiente (disponível: ${disponivelNoCaminhao} kg).`,
+        'danger'
+      );
       return;
     }
 
     if (delta > 0) {
-      let novoTotalGasto = 0;
-      Object.entries(alimentosRetirados).forEach(([id, qtd]) => {
-        novoTotalGasto += (id === idAlimento ? proximoValor : qtd);
-      });
-
-      const saldoFuturo = (cidadao.saldoAlimentoKg + kgAlimentoGerado) - novoTotalGasto;
-
-      if (saldoFuturo < 0) {
-        utilitarios.mostrarNotificacao(`Saldo do munícipe atingido! Pese mais recicláveis.`, 'warning');
+      const totalGasto = Object.entries(retiradas).reduce(
+        (s, [id, qtd]) => s + (id === idProduto ? proximo : qtd),
+        0
+      );
+      if (cidadao.saldoAlimentoKg + kgAlimentoGerado - totalGasto < 0) {
+        utilitarios.mostrarNotificacao('Saldo do munícipe atingido. Pese mais recicláveis.', 'warning');
         return;
       }
     }
 
-    setAlimentosRetirados(prev => ({ ...prev, [idAlimento]: proximoValor }));
+    setRetiradas((prev) => ({ ...prev, [idProduto]: proximo }));
   };
 
   const handleFinalizar = () => {
-    if (kgAlimentoGerado === 0 && kgAlimentoGasto === 0) {
-      utilitarios.mostrarNotificacao('Preencha os recicláveis pesados ou os alimentos retirados.', 'warning');
+    const resultado = appState.registrarTroca({
+      cpfCidadao: cidadao.cpf,
+      idCaminhao: caminhaoAtual.id,
+      reciclaveis,
+      alimentosRetirados: retiradas
+    });
+
+    if (!resultado.ok) {
+      utilitarios.mostrarNotificacao(resultado.erro, 'danger');
       return;
     }
 
-    const tx = {
-      id: `TRX-${Math.floor(1000 + Math.random() * 9000)}`,
-      dataHora: new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }),
-      cpfCidadao: cidadao.cpf,
-      nomeCidadao: cidadao.nome,
-      bairro: cidadao.bairro,
-      idCaminhao: caminhaoAtual.id,
-      reciclaveis: { ...reciclaveis },
-      kgAlimentoGerado,
-      alimentosRetirados: { ...alimentosRetirados },
-      kgAlimentoGasto
-    };
+    setReciclaveis(zerado(banco.materiais.map((m) => m.id)));
+    setRetiradas(zerado(banco.produtos.map((p) => p.id)));
 
-    appState.adicionarTransacao(tx);
-
-    setReciclaveis({ plastico: 0, papelao: 0, vidro: 0, metal: 0, oleo: 0, pneu: 0 });
-    setAlimentosRetirados({ tomate: 0, batata: 0, cenoura: 0, maca: 0, alface: 0, ovos: 0 });
-
-    utilitarios.mostrarNotificacao(`Troca ${tx.id} concluída com sucesso!`, 'success');
-    onFinalizarTransacao(tx);
+    utilitarios.mostrarNotificacao(`Troca ${resultado.transacao.id} concluída!`, 'success');
+    onFinalizarTransacao(resultado.transacao);
   };
 
   return (
     <div>
       {/* Seletor de Caminhão */}
-      <div style={{
-        background: 'rgba(16, 185, 129, 0.1)',
-        border: '1px solid var(--cor-borda-destaque)',
-        padding: '12px 20px',
-        borderRadius: 'var(--raio-m)',
-        marginBottom: '20px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '12px'
-      }}>
+      <div
+        style={{
+          background: 'rgba(16, 185, 129, 0.1)',
+          border: '1px solid var(--cor-borda-destaque)',
+          padding: '12px 20px',
+          borderRadius: 'var(--raio-m)',
+          marginBottom: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '12px'
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <i className="fa-solid fa-truck-front" style={{ fontSize: '20px', color: 'var(--cor-primaria)' }}></i>
           <div>
             <strong style={{ fontSize: '1rem' }}>Terminal Caminhão: {caminhaoAtual.id}</strong>
-            <span style={{ fontSize: '0.85rem', color: 'var(--cor-texto-secundario)', marginLeft: '10px' }}>({caminhaoAtual.bairro})</span>
+            <span style={{ fontSize: '0.85rem', color: 'var(--cor-texto-secundario)', marginLeft: '10px' }}>
+              ({caminhaoAtual.bairro})
+            </span>
           </div>
         </div>
 
         <select
           className="form-control"
           style={{ width: 'auto' }}
-          value={idCaminhaoSelecionado}
+          value={caminhaoAtual.id}
           onChange={(e) => setIdCaminhaoSelecionado(e.target.value)}
         >
-          {banco.caminhoes.map(t => (
-            <option key={t.id} value={t.id}>{t.id} - {t.bairro}</option>
+          {banco.caminhoes.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.id} - {t.bairro}
+            </option>
           ))}
         </select>
       </div>
@@ -126,50 +137,82 @@ export function OperadorComponent({ banco, onFinalizarTransacao }) {
           {/* Passo 1: Munícipe */}
           <div className="card" style={{ marginBottom: '16px' }}>
             <div className="card-header">
-              <h3 className="card-title"><i className="fa-solid fa-user"></i> 1. Munícipe</h3>
+              <h3 className="card-title">
+                <i className="fa-solid fa-user"></i> 1. Munícipe
+              </h3>
             </div>
 
             <div className="form-group" style={{ marginBottom: '10px' }}>
               <select
                 className="form-control"
-                value={cpfCidadao}
+                value={cidadao.cpf}
                 onChange={(e) => setCpfCidadao(e.target.value)}
               >
-                {banco.cidadaos.map(c => (
+                {banco.cidadaos.map((c) => (
                   <option key={c.cpf} value={c.cpf}>
-                    {c.nome} ({c.cpf}) - Saldo: {c.saldoAlimentoKg.toFixed(1)} kg
+                    {c.nome} — Saldo: {c.saldoAlimentoKg.toFixed(1)} kg
                   </option>
                 ))}
               </select>
             </div>
 
-            <div style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '10px 14px', borderRadius: 'var(--raio-p)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div
+              style={{
+                background: 'rgba(15, 23, 42, 0.6)',
+                padding: '10px 14px',
+                borderRadius: 'var(--raio-p)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}
+            >
               <span>{cidadao.nome}</span>
-              <strong style={{ color: 'var(--cor-primaria)' }}>Saldo: {cidadao.saldoAlimentoKg.toFixed(1)} kg</strong>
+              <strong style={{ color: 'var(--cor-primaria)' }}>
+                Saldo: {cidadao.saldoAlimentoKg.toFixed(1)} kg
+              </strong>
             </div>
           </div>
 
           {/* Passo 2: Pesagem */}
           <div className="card">
             <div className="card-header">
-              <h3 className="card-title"><i className="fa-solid fa-scale-balanced"></i> 2. Entradas (Recicláveis)</h3>
+              <h3 className="card-title">
+                <i className="fa-solid fa-scale-balanced"></i> 2. Entradas (Recicláveis)
+              </h3>
               <span className="badge badge-success">+{kgAlimentoGerado.toFixed(1)} kg Alimento</span>
             </div>
 
             <div className="grid-2">
-              {banco.taxasConversao.map(taxa => (
-                <div key={taxa.id} style={{ background: 'rgba(15,23,42,0.6)', border: '1px solid var(--cor-borda)', padding: '10px', borderRadius: 'var(--raio-p)' }}>
-                  <div style={{ fontSize: '0.8rem', marginBottom: '6px', fontWeight: 600 }}>
-                    <i className={`fa-solid ${taxa.icone}`}></i> {taxa.nome}
+              {banco.materiais.map((material) => (
+                <div
+                  key={material.id}
+                  style={{
+                    background: 'rgba(15,23,42,0.6)',
+                    border: '1px solid var(--cor-borda)',
+                    padding: '10px',
+                    borderRadius: 'var(--raio-p)'
+                  }}
+                >
+                  <div style={{ fontSize: '0.8rem', marginBottom: '2px', fontWeight: 600 }}>
+                    <i className={`fa-solid ${material.icone}`}></i> {material.nome}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: '0.7rem',
+                      color: 'var(--cor-texto-secundario)',
+                      marginBottom: '6px'
+                    }}
+                  >
+                    {material.qtdPorKgAlimento} {material.unidade} = 1 kg
                   </div>
                   <input
                     type="number"
                     step="0.5"
                     min="0"
                     className="form-control"
-                    value={reciclaveis[taxa.id] || ''}
-                    placeholder={`0.0 ${taxa.unidade}`}
-                    onChange={(e) => handleAtualizarPeso(taxa.id, e.target.value)}
+                    value={reciclaveis[material.id] || ''}
+                    placeholder={`0.0 ${material.unidade}`}
+                    onChange={(e) => handleAtualizarPeso(material.id, e.target.value)}
                   />
                 </div>
               ))}
@@ -179,29 +222,54 @@ export function OperadorComponent({ banco, onFinalizarTransacao }) {
 
         {/* Passo 3: Cesta & Finalizar */}
         <div>
-          <div className="card" style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div
+            className="card"
+            style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}
+          >
             <div>
               <div className="card-header">
-                <h3 className="card-title"><i className="fa-solid fa-basket-shopping"></i> 3. Saída (Hortifrúti)</h3>
-                <span className="badge badge-info">Disponível: {saldoLiquidoDisponivel.toFixed(1)} kg</span>
+                <h3 className="card-title">
+                  <i className="fa-solid fa-basket-shopping"></i> 3. Saída (Hortifrúti)
+                </h3>
+                <span className="badge badge-info">Disponível: {saldoDisponivel.toFixed(1)} kg</span>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
-                {banco.estoqueCentral.map(alimento => {
-                  const estoqueNoCaminhao = caminhaoAtual.estoqueAlimentosKg[alimento.id] || 0;
-                  const selecionadoAtual = alimentosRetirados[alimento.id] || 0;
+                {banco.produtos.map((produto) => {
+                  const disponivel = carga[produto.id] || 0;
+                  const selecionado = retiradas[produto.id] || 0;
 
                   return (
-                    <div key={alimento.id} style={{ background: 'rgba(15, 23, 42, 0.6)', border: '1px solid var(--cor-borda)', padding: '10px 14px', borderRadius: 'var(--raio-p)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div
+                      key={produto.id}
+                      style={{
+                        background: 'rgba(15, 23, 42, 0.6)',
+                        border: '1px solid var(--cor-borda)',
+                        padding: '10px 14px',
+                        borderRadius: 'var(--raio-p)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        opacity: disponivel > 0 ? 1 : 0.5
+                      }}
+                    >
                       <div>
-                        <strong>{alimento.nome}</strong>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--cor-texto-secundario)' }}>Disponível: {estoqueNoCaminhao} kg</div>
+                        <strong>{produto.nome}</strong>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--cor-texto-secundario)' }}>
+                          No caminhão: {disponivel} kg
+                        </div>
                       </div>
 
                       <div className="counter-box">
-                        <button className="btn-counter" onClick={() => handleAlterarQtdAlimento(alimento.id, -1)}>-</button>
-                        <span style={{ fontWeight: 800, minWidth: '32px', textAlign: 'center' }}>{selecionadoAtual} kg</span>
-                        <button className="btn-counter" onClick={() => handleAlterarQtdAlimento(alimento.id, 1)}>+</button>
+                        <button className="btn-counter" onClick={() => handleAlterarRetirada(produto.id, -1)}>
+                          -
+                        </button>
+                        <span style={{ fontWeight: 800, minWidth: '32px', textAlign: 'center' }}>
+                          {selecionado} kg
+                        </span>
+                        <button className="btn-counter" onClick={() => handleAlterarRetirada(produto.id, 1)}>
+                          +
+                        </button>
                       </div>
                     </div>
                   );
@@ -210,7 +278,14 @@ export function OperadorComponent({ banco, onFinalizarTransacao }) {
             </div>
 
             {/* Finalizar */}
-            <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid var(--cor-borda-destaque)', padding: '16px', borderRadius: 'var(--raio-m)' }}>
+            <div
+              style={{
+                background: 'rgba(16, 185, 129, 0.1)',
+                border: '1px solid var(--cor-borda-destaque)',
+                padding: '16px',
+                borderRadius: 'var(--raio-m)'
+              }}
+            >
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '0.85rem' }}>
                 <span>Crédito Gerado:</span>
                 <strong style={{ color: 'var(--cor-primaria)' }}>+{kgAlimentoGerado.toFixed(1)} kg</strong>
@@ -224,7 +299,7 @@ export function OperadorComponent({ banco, onFinalizarTransacao }) {
                 className="btn btn-primary btn-block"
                 style={{ padding: '12px' }}
                 onClick={handleFinalizar}
-                disabled={saldoLiquidoDisponivel < 0}
+                disabled={kgAlimentoGerado === 0 && kgAlimentoGasto === 0}
               >
                 <i className="fa-solid fa-check"></i> Finalizar Troca & Recibo
               </button>

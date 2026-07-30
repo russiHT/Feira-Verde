@@ -1,53 +1,69 @@
-import React, { useState } from 'react';
-import { appState } from '../estado';
+import React, { useMemo, useState } from 'react';
+import { appState, estoqueCentralPorProduto, TIPO_MOVIMENTO } from '../estado';
 import { utilitarios } from '../utilitarios';
 
 export function ProdutorComponent({ banco }) {
   const [ofertas, setOfertas] = useState({});
   const [nomeProdutor, setNomeProdutor] = useState('Sítio Sol Nascente (Família Oliveira)');
-  const [alimentoSelecionado, setAlimentoSelecionado] = useState('tomate');
-  const [qtdEntrega, setQtdEntrega] = useState('');
-  const [dataLote, setDataLote] = useState(() => new Date().toISOString().split('T')[0]);
+  const [entrega, setEntrega] = useState(() => ({
+    idProduto: banco.produtos[0]?.id || '',
+    qtdKg: '',
+    precoPorKg: '',
+    dataLote: new Date().toISOString().slice(0, 10)
+  }));
 
-  const totalEntregueKg = banco.estoqueCentral.reduce((soma, item) => soma + item.qtdKg, 0);
-  const demandasAtivas = banco.demandasUrgentesProdutos.filter(d => d.status === 'ABERTO');
+  const estoque = useMemo(() => estoqueCentralPorProduto(banco), [banco]);
+  const totalCentralKg = estoque.reduce((s, e) => s + e.qtdKg, 0);
+  const demandasAbertas = banco.demandasUrgentesProdutos.filter((d) => d.status === 'ABERTO');
 
-  const handleAtualizarOferta = (idDemanda, val) => {
-    setOfertas(prev => ({ ...prev, [idDemanda]: val }));
-  };
+  // Histórico real de entradas — cada uma é um lote, com fornecedor e validade.
+  const entradas = useMemo(
+    () =>
+      banco.movimentos
+        .filter((m) => m.tipo === TIPO_MOVIMENTO.ENTRADA)
+        .slice(0, 12)
+        .map((m) => ({
+          ...m,
+          lote: banco.lotes.find((l) => l.id === m.idLote),
+          produto: banco.produtos.find((p) => p.id === m.idProduto)
+        })),
+    [banco]
+  );
 
   const handleAtenderDemanda = (idDemanda) => {
-    const val = ofertas[idDemanda];
-    const qtd = parseFloat(val || 0);
+    const qtd = parseFloat(ofertas[idDemanda]);
+    const r = appState.atenderDemanda({ idDemanda, fornecedor: nomeProdutor, qtdKg: qtd });
 
-    if (!qtd || qtd <= 0) {
-      utilitarios.mostrarNotificacao('Informe uma quantidade válida em kg.', 'warning');
+    if (!r.ok) {
+      utilitarios.mostrarNotificacao(r.erro, 'warning');
       return;
     }
 
-    appState.atenderDemandaProduto(idDemanda, nomeProdutor, qtd);
-    utilitarios.mostrarNotificacao(`Você enviou ${qtd}kg de hortifrúti! Estoque reabastecido.`, 'success');
-    setOfertas(prev => ({ ...prev, [idDemanda]: '' }));
+    utilitarios.mostrarNotificacao(`${qtd} kg enviados. Lote ${r.lote.id} criado.`, 'success');
+    setOfertas((prev) => ({ ...prev, [idDemanda]: '' }));
   };
 
   const handleEnviarColheita = (e) => {
     e.preventDefault();
-    const qtd = parseFloat(qtdEntrega) || 0;
+    const r = appState.registrarEntrada({
+      idProduto: entrega.idProduto,
+      qtdKg: parseFloat(entrega.qtdKg),
+      fornecedor: nomeProdutor,
+      dataLote: entrega.dataLote,
+      precoPorKg: parseFloat(entrega.precoPorKg) || 0,
+      referencia: 'Entrega espontânea'
+    });
 
-    if (qtd <= 0) {
-      utilitarios.mostrarNotificacao('Informe uma quantidade válida para a entrega.', 'warning');
+    if (!r.ok) {
+      utilitarios.mostrarNotificacao(r.erro, 'warning');
       return;
     }
 
-    const item = banco.estoqueCentral.find(s => s.id === alimentoSelecionado);
-    if (item) {
-      item.qtdKg += qtd;
-      item.fornecedor = nomeProdutor;
-      item.dataLote = dataLote;
-      appState.salvar();
-      utilitarios.mostrarNotificacao(`Entrega de ${qtd}kg de ${item.nome} registrada!`, 'success');
-      setQtdEntrega('');
-    }
+    utilitarios.mostrarNotificacao(
+      `Entrega registrada. Lote ${r.lote.id} vence em ${r.lote.dataValidade}.`,
+      'success'
+    );
+    setEntrega((prev) => ({ ...prev, qtdKg: '', precoPorKg: '' }));
   };
 
   return (
@@ -62,85 +78,119 @@ export function ProdutorComponent({ banco }) {
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '0.75rem', color: 'var(--cor-texto-secundario)' }}>Total Fornecido</div>
-            <div style={{ fontFamily: 'var(--fonte-titulo)', fontSize: '1.2rem', fontWeight: 800, color: 'var(--cor-destaque)' }}>
-              {totalEntregueKg} kg
+            <div style={{ fontSize: '0.75rem', color: 'var(--cor-texto-secundario)' }}>
+              Estoque atual no almoxarifado
+            </div>
+            <div
+              style={{
+                fontFamily: 'var(--fonte-titulo)',
+                fontSize: '1.2rem',
+                fontWeight: 800,
+                color: 'var(--cor-destaque)'
+              }}
+            >
+              {totalCentralKg.toFixed(0)} kg
             </div>
           </div>
         </div>
       </div>
 
-      {/* Demanda Urgente */}
+      {/* Demandas */}
       <div className="card" style={{ marginBottom: '20px' }}>
         <div className="card-header">
           <h3 className="card-title" style={{ color: 'var(--cor-destaque)' }}>
-            <i className="fa-solid fa-bell-exclamation"></i> Pedidos da Prefeitura ({demandasAtivas.length} Abertos)
+            <i className="fa-solid fa-bell"></i> Pedidos da Prefeitura ({demandasAbertas.length} abertos)
           </h3>
         </div>
 
-        <div className="grid-2">
-          {banco.demandasUrgentesProdutos.map(demanda => {
-            const porcentagem = Math.min(100, Math.round((demanda.kgAtendidos / demanda.kgSolicitados) * 100));
-            const ehConcluido = demanda.status === 'CONCLUIDO';
+        {banco.demandasUrgentesProdutos.length === 0 ? (
+          <p style={{ fontSize: '0.85rem', color: 'var(--cor-texto-secundario)', margin: 0 }}>
+            Nenhum pedido no momento.
+          </p>
+        ) : (
+          <div className="grid-2">
+            {banco.demandasUrgentesProdutos.map((demanda) => {
+              const pct = Math.min(100, Math.round((demanda.kgAtendidos / demanda.kgSolicitados) * 100));
+              const concluido = demanda.status === 'CONCLUIDO';
 
-            return (
-              <div key={demanda.id} style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '12px', borderRadius: 'var(--raio-p)', border: '1px solid var(--cor-borda)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <strong style={{ fontSize: '0.9rem' }}>{demanda.nomeAlimento}</strong>
-                  <span className={`badge ${ehConcluido ? 'badge-success' : 'badge-warning'}`}>
-                    {ehConcluido ? 'Atendido' : 'Urgente'}
-                  </span>
-                </div>
-
-                <div style={{ fontSize: '0.8rem', color: 'var(--cor-texto-secundario)', marginBottom: '8px' }}>
-                  {demanda.motivo}
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '6px' }}>
-                  <span>Progresso:</span>
-                  <strong>{demanda.kgAtendidos} / {demanda.kgSolicitados} kg ({porcentagem}%)</strong>
-                </div>
-
-                <div className="progress-bar-bg" style={{ marginBottom: '10px' }}>
-                  <div
-                    className="progress-bar-fill"
-                    style={{
-                      width: `${porcentagem}%`,
-                      background: ehConcluido ? 'linear-gradient(90deg, #10b981, #059669)' : 'linear-gradient(90deg, #f59e0b, #10b981)'
-                    }}
-                  ></div>
-                </div>
-
-                {!ehConcluido ? (
-                  <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-                    <input
-                      type="number"
-                      min="1"
-                      className="form-control"
-                      placeholder="Qtd em kg"
-                      value={ofertas[demanda.id] || ''}
-                      onChange={(e) => handleAtualizarOferta(demanda.id, e.target.value)}
-                    />
-                    <button className="btn btn-primary btn-sm" style={{ whiteSpace: 'nowrap' }} onClick={() => handleAtenderDemanda(demanda.id)}>
-                      Enviar
-                    </button>
+              return (
+                <div
+                  key={demanda.id}
+                  style={{
+                    background: 'rgba(15, 23, 42, 0.6)',
+                    padding: '12px',
+                    borderRadius: 'var(--raio-p)',
+                    border: '1px solid var(--cor-borda)'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <strong style={{ fontSize: '0.9rem' }}>{demanda.nomeProduto}</strong>
+                    <span className={`badge ${concluido ? 'badge-success' : 'badge-warning'}`}>
+                      {concluido ? 'Atendido' : 'Urgente'}
+                    </span>
                   </div>
-                ) : (
-                  <div style={{ textAlign: 'center', fontSize: '0.8rem', color: 'var(--cor-primaria)', marginTop: '6px' }}>
-                    <i className="fa-solid fa-check"></i> Atendido
+
+                  <div style={{ fontSize: '0.8rem', color: 'var(--cor-texto-secundario)', marginBottom: '8px' }}>
+                    {demanda.motivo}
                   </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '6px' }}>
+                    <span>Progresso:</span>
+                    <strong>
+                      {demanda.kgAtendidos} / {demanda.kgSolicitados} kg ({pct}%)
+                    </strong>
+                  </div>
+
+                  <div className="progress-bar-bg" style={{ marginBottom: '10px' }}>
+                    <div
+                      className="progress-bar-fill"
+                      style={{
+                        width: `${pct}%`,
+                        background: concluido
+                          ? 'linear-gradient(90deg, #10b981, #059669)'
+                          : 'linear-gradient(90deg, #f59e0b, #10b981)'
+                      }}
+                    ></div>
+                  </div>
+
+                  {concluido ? (
+                    <div style={{ textAlign: 'center', fontSize: '0.8rem', color: 'var(--cor-primaria)', marginTop: '6px' }}>
+                      <i className="fa-solid fa-check"></i> Atendido
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                      <input
+                        type="number"
+                        min="1"
+                        step="0.5"
+                        className="form-control"
+                        placeholder="Qtd em kg"
+                        value={ofertas[demanda.id] || ''}
+                        onChange={(e) => setOfertas((p) => ({ ...p, [demanda.id]: e.target.value }))}
+                      />
+                      <button
+                        className="btn btn-primary btn-sm"
+                        style={{ whiteSpace: 'nowrap' }}
+                        onClick={() => handleAtenderDemanda(demanda.id)}
+                      >
+                        Enviar
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div className="grid-2">
-        {/* Nova Entrega */}
+        {/* Nova entrega */}
         <div className="card">
           <div className="card-header">
-            <h3 className="card-title"><i className="fa-solid fa-plus-circle"></i> Registrar Entrega</h3>
+            <h3 className="card-title">
+              <i className="fa-solid fa-plus-circle"></i> Registrar Entrega
+            </h3>
           </div>
 
           <form onSubmit={handleEnviarColheita}>
@@ -160,11 +210,13 @@ export function ProdutorComponent({ banco }) {
                 <label className="form-label">Alimento</label>
                 <select
                   className="form-control"
-                  value={alimentoSelecionado}
-                  onChange={(e) => setAlimentoSelecionado(e.target.value)}
+                  value={entrega.idProduto}
+                  onChange={(e) => setEntrega((p) => ({ ...p, idProduto: e.target.value }))}
                 >
-                  {banco.estoqueCentral.map(item => (
-                    <option key={item.id} value={item.id}>{item.nome}</option>
+                  {banco.produtos.map((produto) => (
+                    <option key={produto.id} value={produto.id}>
+                      {produto.nome} ({produto.validadeDias}d de validade)
+                    </option>
                   ))}
                 </select>
               </div>
@@ -175,10 +227,37 @@ export function ProdutorComponent({ banco }) {
                   type="number"
                   className="form-control"
                   placeholder="ex: 200"
-                  value={qtdEntrega}
-                  onChange={(e) => setQtdEntrega(e.target.value)}
+                  value={entrega.qtdKg}
+                  onChange={(e) => setEntrega((p) => ({ ...p, qtdKg: e.target.value }))}
                   required
                   min="1"
+                  step="0.5"
+                />
+              </div>
+            </div>
+
+            <div className="grid-2" style={{ marginBottom: '10px' }}>
+              <div className="form-group">
+                <label className="form-label">Data da colheita / lote</label>
+                <input
+                  type="date"
+                  className="form-control"
+                  value={entrega.dataLote}
+                  onChange={(e) => setEntrega((p) => ({ ...p, dataLote: e.target.value }))}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Preço por kg (R$)</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  placeholder="opcional"
+                  step="0.01"
+                  min="0"
+                  value={entrega.precoPorKg}
+                  onChange={(e) => setEntrega((p) => ({ ...p, precoPorKg: e.target.value }))}
                 />
               </div>
             </div>
@@ -189,27 +268,49 @@ export function ProdutorComponent({ banco }) {
           </form>
         </div>
 
-        {/* Historico */}
+        {/* Histórico de lotes */}
         <div className="card">
           <div className="card-header">
-            <h3 className="card-title"><i className="fa-solid fa-list"></i> Entregas no Almoxarifado</h3>
+            <h3 className="card-title">
+              <i className="fa-solid fa-list"></i> Últimas Entradas no Almoxarifado
+            </h3>
           </div>
 
           <div className="table-responsive">
             <table className="table">
               <thead>
                 <tr>
-                  <th>Item</th>
-                  <th>Quantidade</th>
-                  <th>Fornecedor</th>
+                  <th>Lote</th>
+                  <th>Entrada</th>
+                  <th>Saldo / Validade</th>
                 </tr>
               </thead>
               <tbody>
-                {banco.estoqueCentral.map(item => (
-                  <tr key={item.id}>
-                    <td><strong>{item.nome}</strong></td>
-                    <td><span className="badge badge-success">{item.qtdKg} kg</span></td>
-                    <td style={{ fontSize: '0.8rem', color: 'var(--cor-texto-secundario)' }}>{item.fornecedor}</td>
+                {entradas.length === 0 && (
+                  <tr>
+                    <td colSpan={3} style={{ color: 'var(--cor-texto-secundario)', fontSize: '0.85rem' }}>
+                      Nenhuma entrada registrada ainda.
+                    </td>
+                  </tr>
+                )}
+                {entradas.map((mov) => (
+                  <tr key={mov.id}>
+                    <td>
+                      <strong>{mov.produto?.nome || mov.idProduto}</strong>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--cor-texto-secundario)' }}>
+                        {mov.lote?.fornecedor || mov.origem}
+                      </div>
+                    </td>
+                    <td>
+                      <span className="badge badge-success">{mov.qtdKg} kg</span>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--cor-texto-secundario)' }}>
+                        {mov.lote?.dataLote}
+                      </div>
+                    </td>
+                    <td style={{ fontSize: '0.8rem', color: 'var(--cor-texto-secundario)' }}>
+                      {mov.lote ? `${mov.lote.qtdDisponivelKg} kg restantes` : '—'}
+                      <div style={{ fontSize: '0.7rem' }}>vence {mov.lote?.dataValidade}</div>
+                    </td>
                   </tr>
                 ))}
               </tbody>

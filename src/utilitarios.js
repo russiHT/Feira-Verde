@@ -1,57 +1,64 @@
 export const utilitarios = {
-  // Notificações Flutuantes (Toasts)
+  /** Notificações flutuantes (toasts). */
   mostrarNotificacao(mensagem, tipo = 'success') {
-    let meucarter = document.querySelector('.toast-container');
-    if (!meucarter) {
-      meucarter = document.createElement('div');
-      meucarter.className = 'toast-container';
-      document.body.appendChild(meucarter);
+    let container = document.querySelector('.toast-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.className = 'toast-container';
+      document.body.appendChild(container);
     }
 
-    const cartaoToast = document.createElement('div');
-    cartaoToast.className = `toast ${tipo}`;
+    const toast = document.createElement('div');
+    toast.className = `toast ${tipo}`;
 
     let icone = 'fa-circle-check';
     if (tipo === 'danger') icone = 'fa-triangle-exclamation';
     if (tipo === 'warning') icone = 'fa-bell';
 
-    // Criar elementos DOM com textContent para garantir escaping
-    const iconElem = document.createElement('i');
-    iconElem.className = `fa-solid ${icone}`;
+    // textContent em vez de innerHTML: a mensagem pode conter dado de entrada.
+    const iconeElem = document.createElement('i');
+    iconeElem.className = `fa-solid ${icone}`;
 
-    const textWrapper = document.createElement('div');
-    const titleElem = document.createElement('div');
-    titleElem.style.fontWeight = '700';
-    titleElem.style.fontSize = '0.9rem';
-    titleElem.textContent = 'FeiraVerde Digital';
+    const wrapper = document.createElement('div');
 
-    const msgElem = document.createElement('div');
-    msgElem.style.fontSize = '0.85rem';
-    msgElem.style.color = '#cbd5e1';
-    msgElem.textContent = mensagem;
+    const titulo = document.createElement('div');
+    titulo.style.fontWeight = '700';
+    titulo.style.fontSize = '0.9rem';
+    titulo.textContent = 'FeiraVerde Digital';
 
-    textWrapper.appendChild(titleElem);
-    textWrapper.appendChild(msgElem);
+    const corpo = document.createElement('div');
+    corpo.style.fontSize = '0.85rem';
+    corpo.style.color = '#cbd5e1';
+    corpo.textContent = mensagem;
 
-    cartaoToast.appendChild(iconElem);
-    cartaoToast.appendChild(textWrapper);
-
-    meucarter.appendChild(cartaoToast);
+    wrapper.append(titulo, corpo);
+    toast.append(iconeElem, wrapper);
+    container.appendChild(toast);
 
     setTimeout(() => {
-      cartaoToast.style.opacity = '0';
-      cartaoToast.style.transform = 'translateX(100%)';
-      cartaoToast.style.transition = 'all 0.3s ease';
-      setTimeout(() => cartaoToast.remove(), 300);
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateX(100%)';
+      toast.style.transition = 'all 0.3s ease';
+      setTimeout(() => toast.remove(), 300);
     }, 4000);
   },
 
-  // Formatadores
-  formatarPeso(val, unidade = 'kg') {
-    return `${parseFloat(val || 0).toFixed(1)} ${unidade}`;
+  /**
+   * Mascara CPF para exibição. Enquanto o dado ainda vive no navegador,
+   * ao menos nunca aparece inteiro na tela nem em impressão.
+   */
+  mascararCpf(cpf) {
+    if (!cpf) return '***.***.***-**';
+    const digitos = String(cpf).replace(/\D/g, '');
+    if (digitos.length !== 11) return '***.***.***-**';
+    return `***.${digitos.slice(3, 6)}.${digitos.slice(6, 9)}-**`;
   },
 
-  formatarMoeda(val) {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
+  formatarPeso(valor, unidade = 'kg') {
+    return `${(parseFloat(valor) || 0).toFixed(1)} ${unidade}`;
+  },
+
+  formatarMoeda(valor) {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor || 0);
   }
 };

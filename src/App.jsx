@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useAppState, appState } from './estado';
+import { appState } from './estado';
+import { useAppState } from './useAppState';
 import { utilitarios } from './utilitarios';
 import { AdminComponent } from './components/Admin';
 import { OperadorComponent } from './components/Operador';
@@ -22,9 +23,9 @@ export function App() {
   const [alertModalOpen, setAlertModalOpen] = useState(false);
 
   const handleResetar = () => {
-    if (window.confirm('Resetar banco de dados simulado?')) {
+    if (window.confirm('Resetar o banco de dados simulado? Todo o histórico local será perdido.')) {
       appState.resetar();
-      utilitarios.mostrarNotificacao('Dados reinicializados com sucesso', 'info');
+      utilitarios.mostrarNotificacao('Dados reinicializados.', 'success');
     }
   };
 
@@ -135,6 +136,7 @@ export function App() {
       <AlertModal
         isOpen={alertModalOpen}
         onClose={() => setAlertModalOpen(false)}
+        banco={banco}
       />
     </div>
   );

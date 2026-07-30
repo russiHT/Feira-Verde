@@ -14,8 +14,12 @@ export function StatusModal({ isOpen, onClose, caminhao }) {
   if (!isOpen || !caminhao) return null;
 
   const handleSalvar = () => {
-    appState.atualizarStatusRota(caminhao.id, novoStatus);
-    utilitarios.mostrarNotificacao(`Status do Caminhão ${caminhao.id} atualizado com sucesso!`, 'success');
+    const r = appState.atualizarStatusRota(caminhao.id, novoStatus);
+    if (!r.ok) {
+      utilitarios.mostrarNotificacao(r.erro, 'danger');
+      return;
+    }
+    utilitarios.mostrarNotificacao(`Status do caminhão ${caminhao.id} atualizado.`, 'success');
     onClose();
   };
 
