@@ -85,7 +85,7 @@ export function CidadaoComponent({ banco }) {
         <div className="card">
           <div className="card-header">
             <h3 className="card-title">
-              <i className="fa-solid fa-calculator"></i> Calculadora de Troca
+              <i className="fa-solid fa-calculator"></i> Simular troca
             </h3>
             <span className="badge badge-success">+{kgSimulado.toFixed(1)} kg Alimento</span>
           </div>
@@ -176,7 +176,7 @@ export function CidadaoComponent({ banco }) {
           <div className="card" style={{ marginBottom: '16px' }}>
             <div className="card-header">
               <h3 className="card-title">
-                <i className="fa-solid fa-map-pin"></i> Horários dos Caminhões
+                <i className="fa-solid fa-map-pin"></i> Pontos de atendimento
               </h3>
             </div>
 
@@ -234,7 +234,7 @@ export function CidadaoComponent({ banco }) {
           <div className="card">
             <div className="card-header">
               <h3 className="card-title">
-                <i className="fa-solid fa-clock-rotate-left"></i> Minhas Últimas Trocas
+                <i className="fa-solid fa-clock-rotate-left"></i> Histórico
               </h3>
             </div>
 

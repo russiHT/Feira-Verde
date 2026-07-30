@@ -138,7 +138,7 @@ export function OperadorComponent({ banco, onFinalizarTransacao }) {
           <div className="card" style={{ marginBottom: '16px' }}>
             <div className="card-header">
               <h3 className="card-title">
-                <i className="fa-solid fa-user"></i> 1. Munícipe
+                <i className="fa-solid fa-user"></i> Munícipe
               </h3>
             </div>
 
@@ -177,7 +177,7 @@ export function OperadorComponent({ banco, onFinalizarTransacao }) {
           <div className="card">
             <div className="card-header">
               <h3 className="card-title">
-                <i className="fa-solid fa-scale-balanced"></i> 2. Entradas (Recicláveis)
+                <i className="fa-solid fa-scale-balanced"></i> Pesagem
               </h3>
               <span className="badge badge-success">+{kgAlimentoGerado.toFixed(1)} kg Alimento</span>
             </div>
@@ -229,7 +229,7 @@ export function OperadorComponent({ banco, onFinalizarTransacao }) {
             <div>
               <div className="card-header">
                 <h3 className="card-title">
-                  <i className="fa-solid fa-basket-shopping"></i> 3. Saída (Hortifrúti)
+                  <i className="fa-solid fa-basket-shopping"></i> Retirada
                 </h3>
                 <span className="badge badge-info">Disponível: {saldoDisponivel.toFixed(1)} kg</span>
               </div>
@@ -301,7 +301,7 @@ export function OperadorComponent({ banco, onFinalizarTransacao }) {
                 onClick={handleFinalizar}
                 disabled={kgAlimentoGerado === 0 && kgAlimentoGasto === 0}
               >
-                <i className="fa-solid fa-check"></i> Finalizar Troca & Recibo
+                <i className="fa-solid fa-check"></i> Registrar troca
               </button>
             </div>
           </div>

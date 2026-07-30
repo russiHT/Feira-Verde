@@ -32,7 +32,7 @@ export function AlertModal({ isOpen, onClose, banco }) {
       <div className="modal-box">
         <div className="modal-header">
           <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--cor-destaque)' }}>
-            <i className="fa-solid fa-bullhorn"></i> Emitir Demanda Urgente de Hortifrúti
+            <i className="fa-solid fa-bullhorn"></i> Novo pedido de abastecimento
           </h3>
           <button className="modal-close" onClick={onClose}>
             &times;
@@ -87,7 +87,7 @@ export function AlertModal({ isOpen, onClose, banco }) {
             className="btn btn-warning"
             onClick={handleDisparar}
           >
-            <i className="fa-solid fa-paper-plane"></i> Disparar Demanda
+            <i className="fa-solid fa-paper-plane"></i> Publicar pedido
           </button>
         </div>
       </div>

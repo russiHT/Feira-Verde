@@ -10,29 +10,25 @@ import { ReceiptModal } from './components/ReceiptModal';
 import { StatusModal } from './components/StatusModal';
 import { AlertModal } from './components/AlertModal';
 
-const perfis = {
+const modulos = {
   admin: {
-    icone: 'fa-chart-line',
-    titulo: 'Gestão & Estoque',
-    descricao: 'Secretaria Municipal de Meio Ambiente',
+    titulo: 'Gestão e estoque',
+    descricao: 'Controle operacional do programa',
     aba: 'Gestão'
   },
   operator: {
-    icone: 'fa-cash-register',
-    titulo: 'PDV de Troca',
-    descricao: 'Atendimento em rota',
-    aba: 'PDV Troca'
+    titulo: 'Atendimento de troca',
+    descricao: 'Terminal de pesagem e retirada',
+    aba: 'Atendimento'
   },
   citizen: {
-    icone: 'fa-id-card',
-    titulo: 'Área do Cidadão',
-    descricao: 'Consulta do munícipe',
+    titulo: 'Consulta do cidadão',
+    descricao: 'Saldo, horários e histórico',
     aba: 'Cidadão'
   },
   producer: {
-    icone: 'fa-tractor',
-    titulo: 'Produtores',
-    descricao: 'Agricultura familiar',
+    titulo: 'Produtores rurais',
+    descricao: 'Entregas e demandas abertas',
     aba: 'Produtores'
   }
 };
@@ -40,7 +36,7 @@ const perfis = {
 export function App() {
   const banco = useAppState();
   const [perfilAtual, setPerfilAtual] = useState('admin');
-  const perfil = perfis[perfilAtual];
+  const modulo = modulos[perfilAtual];
 
   const [reciboModalOpen, setReciboModalOpen] = useState(false);
   const [transacaoRecibo, setTransacaoRecibo] = useState(null);
@@ -69,89 +65,88 @@ export function App() {
 
   return (
     <div className="app-shell">
-      <aside className="app-sidebar">
-        <a href="#" className="brand-logo">
-          <div className="brand-icon">
-            <i className="fa-solid fa-leaf"></i>
+      <header className="institutional-header">
+        <div className="govbar">
+          <span>Prefeitura Municipal</span>
+          <span>Secretaria de Meio Ambiente</span>
+        </div>
+
+        <div className="masthead">
+          <a href="#" className="brand-logo">
+            <div className="brand-mark">FV</div>
+            <div>
+              <div className="brand-title">FeiraVerde Digital</div>
+              <div className="brand-subtitle">Sistema de gestão do programa</div>
+            </div>
+          </a>
+
+          <div className="masthead-actions">
+            <span className="environment-label">Ambiente local</span>
+            <button
+              className="btn btn-secondary btn-sm"
+              onClick={handleResetar}
+              title="Resetar banco de dados simulado"
+            >
+              Resetar base
+            </button>
           </div>
-          <div>
-            <div className="brand-title">FeiraVerde Digital</div>
-            <div className="brand-subtitle">Programa municipal</div>
-          </div>
-        </a>
+        </div>
 
         <nav className="role-nav" aria-label="Módulos do sistema">
-          {Object.entries(perfis).map(([id, item]) => (
+          {Object.entries(modulos).map(([id, item]) => (
             <button
               key={id}
               className={`role-btn ${perfilAtual === id ? 'active' : ''}`}
               onClick={() => setPerfilAtual(id)}
             >
-              <i className={`fa-solid ${item.icone}`}></i>
-              <span>{item.aba}</span>
+              {item.aba}
             </button>
           ))}
         </nav>
+      </header>
 
-        <div className="sidebar-footer">
-          <div className="system-chip">
-            <span className="status-dot"></span>
-            Dados locais ativos
-          </div>
-          <button
-            className="btn btn-secondary btn-sm btn-block"
-            onClick={handleResetar}
-            title="Resetar Banco de Dados Simulado"
-          >
-            <i className="fa-solid fa-rotate-left"></i> Resetar base
-          </button>
-        </div>
-      </aside>
-
-      <div className="app-workspace">
-        <header className="topbar">
+      <main className="main-content">
+        <section className="module-header">
           <div>
-            <div className="breadcrumb">FeiraVerde / {perfil.aba}</div>
-            <h1>{perfil.titulo}</h1>
-            <p>{perfil.descricao}</p>
+            <div className="breadcrumb">FeiraVerde / {modulo.aba}</div>
+            <h1>{modulo.titulo}</h1>
+            <p>{modulo.descricao}</p>
           </div>
 
-          <div className="topbar-metrics" aria-label="Resumo do sistema">
+          <dl className="system-summary" aria-label="Resumo do sistema">
             <div>
-              <strong>{banco.caminhoes.length}</strong>
-              <span>Caminhões</span>
+              <dt>Caminhões</dt>
+              <dd>{banco.caminhoes.length}</dd>
             </div>
             <div>
-              <strong>{banco.cidadaos.length}</strong>
-              <span>Munícipes</span>
+              <dt>Munícipes</dt>
+              <dd>{banco.cidadaos.length}</dd>
             </div>
             <div>
-              <strong>{banco.produtos.length}</strong>
-              <span>Alimentos</span>
+              <dt>Alimentos</dt>
+              <dd>{banco.produtos.length}</dd>
             </div>
-          </div>
-        </header>
+          </dl>
+        </section>
 
-        <main className="main-content">
-          <div id="view-container">
-            {perfilAtual === 'admin' && (
-              <AdminComponent
-                banco={banco}
-                onAbrirStatusModal={handleAbrirStatusModal}
-                onAbrirAlertModal={() => setAlertModalOpen(true)}
-              />
-            )}
-            {perfilAtual === 'operator' && (
-              <OperadorComponent
-                banco={banco}
-                onFinalizarTransacao={handleFinalizarTransacaoOperador}
-              />
-            )}
-            {perfilAtual === 'citizen' && <CidadaoComponent banco={banco} />}
-            {perfilAtual === 'producer' && <ProdutorComponent banco={banco} />}
-          </div>
-        </main>
-      </div>
+        <div id="view-container">
+          {perfilAtual === 'admin' && (
+            <AdminComponent
+              banco={banco}
+              onAbrirStatusModal={handleAbrirStatusModal}
+              onAbrirAlertModal={() => setAlertModalOpen(true)}
+            />
+          )}
+          {perfilAtual === 'operator' && (
+            <OperadorComponent
+              banco={banco}
+              onFinalizarTransacao={handleFinalizarTransacaoOperador}
+            />
+          )}
+          {perfilAtual === 'citizen' && <CidadaoComponent banco={banco} />}
+          {perfilAtual === 'producer' && <ProdutorComponent banco={banco} />}
+        </div>
+      </main>
 
       <ReceiptModal
         isOpen={reciboModalOpen}

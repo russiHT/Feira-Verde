@@ -28,7 +28,7 @@ export function StatusModal({ isOpen, onClose, caminhao }) {
       <div className="modal-box">
         <div className="modal-header">
           <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--cor-primaria)' }}>
-            <i className="fa-solid fa-pen-to-square"></i> Alterar Status do Atendimento da Rota
+            <i className="fa-solid fa-pen-to-square"></i> Atualizar rota
           </h3>
           <button className="modal-close" onClick={onClose}>&times;</button>
         </div>
@@ -56,7 +56,7 @@ export function StatusModal({ isOpen, onClose, caminhao }) {
         <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
           <button className="btn btn-secondary" onClick={onClose}>Cancelar</button>
           <button className="btn btn-primary" onClick={handleSalvar}>
-            <i className="fa-solid fa-floppy-disk"></i> Salvar Novo Status
+            <i className="fa-solid fa-floppy-disk"></i> Salvar
           </button>
         </div>
       </div>

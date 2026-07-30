@@ -116,10 +116,10 @@ export function AdminComponent({ banco, onAbrirStatusModal, onAbrirAlertModal })
         >
           <h3 style={{ fontSize: '1rem', margin: 0 }}>
             <i className="fa-solid fa-bullhorn" style={{ color: 'var(--cor-destaque)', marginRight: '8px' }}></i>
-            Demandas Urgentes aos Produtores
+            Demandas aos produtores
           </h3>
           <button className="btn btn-warning btn-sm" onClick={onAbrirAlertModal}>
-            <i className="fa-solid fa-plus"></i> Notificar Urgência
+            <i className="fa-solid fa-plus"></i> Novo pedido
           </button>
         </div>
 
@@ -171,7 +171,7 @@ export function AdminComponent({ banco, onAbrirStatusModal, onAbrirAlertModal })
         <div className="card">
           <div className="card-header">
             <h3 className="card-title">
-              <i className="fa-solid fa-map-location-dot"></i> Rotas dos Caminhões
+              <i className="fa-solid fa-map-location-dot"></i> Rotas
             </h3>
           </div>
 
@@ -288,7 +288,7 @@ export function AdminComponent({ banco, onAbrirStatusModal, onAbrirAlertModal })
       <div className="card" style={{ marginTop: '20px' }}>
         <div className="card-header">
           <h3 className="card-title">
-            <i className="fa-solid fa-dolly"></i> Carregar Caminhão (almoxarifado → rota)
+            <i className="fa-solid fa-dolly"></i> Carregamento de rota
           </h3>
         </div>
 
@@ -347,7 +347,7 @@ export function AdminComponent({ banco, onAbrirStatusModal, onAbrirAlertModal })
       <div className="card" style={{ marginTop: '20px' }}>
         <div className="card-header">
           <h3 className="card-title">
-            <i className="fa-solid fa-sliders"></i> Taxas de Conversão (material → 1 kg de alimento)
+            <i className="fa-solid fa-sliders"></i> Regras de conversão
           </h3>
         </div>
 

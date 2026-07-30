@@ -72,7 +72,7 @@ export function ProdutorComponent({ banco }) {
       <div className="card" style={{ marginBottom: '20px', padding: '16px 20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
           <div>
-            <h2 style={{ fontSize: '1.2rem', margin: 0 }}>Portal dos Produtores Rurais</h2>
+            <h2 style={{ fontSize: '1.2rem', margin: 0 }}>Cadastro do produtor</h2>
             <div style={{ fontSize: '0.85rem', color: 'var(--cor-texto-secundario)', marginTop: '2px' }}>
               Agricultura Familiar & Cooperativas
             </div>
@@ -99,7 +99,7 @@ export function ProdutorComponent({ banco }) {
       <div className="card" style={{ marginBottom: '20px' }}>
         <div className="card-header">
           <h3 className="card-title" style={{ color: 'var(--cor-destaque)' }}>
-            <i className="fa-solid fa-bell"></i> Pedidos da Prefeitura ({demandasAbertas.length} abertos)
+            <i className="fa-solid fa-bell"></i> Demandas abertas ({demandasAbertas.length})
           </h3>
         </div>
 
@@ -187,7 +187,7 @@ export function ProdutorComponent({ banco }) {
         <div className="card">
           <div className="card-header">
             <h3 className="card-title">
-              <i className="fa-solid fa-plus-circle"></i> Registrar Entrega
+              <i className="fa-solid fa-plus-circle"></i> Nova entrega
             </h3>
           </div>
 
@@ -261,7 +261,7 @@ export function ProdutorComponent({ banco }) {
             </div>
 
             <button type="submit" className="btn btn-primary btn-block">
-              Confirmar Entrada
+              Registrar
             </button>
           </form>
         </div>
@@ -270,7 +270,7 @@ export function ProdutorComponent({ banco }) {
         <div className="card">
           <div className="card-header">
             <h3 className="card-title">
-              <i className="fa-solid fa-list"></i> Últimas Entradas no Almoxarifado
+              <i className="fa-solid fa-list"></i> Histórico de entregas
             </h3>
           </div>
 
