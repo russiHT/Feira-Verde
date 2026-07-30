@@ -76,17 +76,28 @@ window.componenteCidadao = {
             Insira a quantidade de recicláveis que você tem em casa e veja quantos kg de alimentos frescos poderá retirar no caminhão!
           </p>
 
-          <div style="display:flex; flex-direction:column; gap:16px; margin-bottom: 20px;">
+          <div style="display:flex; flex-direction:column; gap:10px; margin-bottom: 20px;">
             ${banco.taxasConversao.map(taxa => `
-              <div>
-                <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom: 4px;">
-                  <span><i class="fa-solid ${taxa.icone}"></i> ${taxa.nome}</span>
-                  <strong>${this.pesosCalculadora[taxa.id] || 0} ${taxa.unidade}</strong>
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 12px; background:rgba(15, 23, 42, 0.4); border-radius:var(--raio-s); border:1px solid var(--cor-borda);">
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <div style="width:32px; height:32px; border-radius:50%; background:rgba(16, 185, 129, 0.15); display:flex; align-items:center; justify-content:center; color:var(--cor-primaria);">
+                    <i class="fa-solid ${taxa.icone}"></i>
+                  </div>
+                  <div>
+                    <div style="font-size:0.9rem; font-weight:600;">${taxa.nome}</div>
+                    <div style="font-size:0.75rem; color:var(--cor-texto-secundario);">
+                      Taxa: ${taxa.kgPorKgAlimento} ${taxa.unidade} = 1 kg alimento
+                    </div>
+                  </div>
                 </div>
-                <input type="range" min="0" max="30" step="0.5" 
-                  value="${this.pesosCalculadora[taxa.id] || 0}" 
-                  style="width:100%; accent-color: var(--cor-primaria);"
-                  oninput="window.componenteCidadao.atualizarSimulacao('${taxa.id}', this.value)">
+
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <input type="number" class="form-control" min="0" step="0.5" placeholder="0"
+                    value="${this.pesosCalculadora[taxa.id] !== undefined ? this.pesosCalculadora[taxa.id] : ''}" 
+                    style="width:90px; text-align:right; font-weight:600;"
+                    oninput="window.componenteCidadao.atualizarSimulacao('${taxa.id}', this.value)">
+                  <span style="font-size:0.85rem; color:var(--cor-texto-secundario); min-width:24px;">${taxa.unidade}</span>
+                </div>
               </div>
             `).join('')}
           </div>

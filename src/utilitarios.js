@@ -1,5 +1,3 @@
-/* FeiraVerde Digital - Funções Utilitárias & Auxiliares de UI */
-
 export const utilitarios = {
   // Notificações Flutuantes (Toasts)
   mostrarNotificacao(mensagem, tipo = 'success') {
@@ -12,12 +10,12 @@ export const utilitarios = {
 
     const cartaoToast = document.createElement('div');
     cartaoToast.className = `toast ${tipo}`;
-    
+
     let icone = 'fa-circle-check';
     if (tipo === 'danger') icone = 'fa-triangle-exclamation';
     if (tipo === 'warning') icone = 'fa-bell';
 
-    // Criar elementos DOM com textContent para garantir escaping 100% seguro em mensagens dinâmicas
+    // Criar elementos DOM com textContent para garantir escaping
     const iconElem = document.createElement('i');
     iconElem.className = `fa-solid ${icone}`;
 

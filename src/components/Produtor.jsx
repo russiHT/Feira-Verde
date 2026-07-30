@@ -96,9 +96,19 @@ export function ProdutorComponent({ banco }) {
                   {demanda.motivo}
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '4px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '6px' }}>
                   <span>Progresso:</span>
                   <strong>{demanda.kgAtendidos} / {demanda.kgSolicitados} kg ({porcentagem}%)</strong>
+                </div>
+
+                <div className="progress-bar-bg" style={{ marginBottom: '10px' }}>
+                  <div
+                    className="progress-bar-fill"
+                    style={{
+                      width: `${porcentagem}%`,
+                      background: ehConcluido ? 'linear-gradient(90deg, #10b981, #059669)' : 'linear-gradient(90deg, #f59e0b, #10b981)'
+                    }}
+                  ></div>
                 </div>
 
                 {!ehConcluido ? (

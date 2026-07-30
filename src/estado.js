@@ -1,4 +1,3 @@
-/* FeiraVerde Digital - Gerenciamento de Estado & Dados Iniciais em React */
 import { useState, useEffect } from 'react';
 
 const bancoInicial = {
@@ -211,12 +210,12 @@ class EstadoApp {
 
   adicionarTransacao(tx) {
     this.banco.transacoes.unshift(tx);
-    
+
     const cidadao = this.obterCidadao(tx.cpfCidadao);
     if (cidadao) {
       const diferencaLiquida = tx.kgAlimentoGerado - tx.kgAlimentoGasto;
       cidadao.saldoAlimentoKg = Math.max(0, cidadao.saldoAlimentoKg + diferencaLiquida);
-      
+
       let totalKgNaTx = 0;
       Object.values(tx.reciclaveis).forEach(v => totalKgNaTx += v);
       cidadao.totalRecicladoKg += totalKgNaTx;

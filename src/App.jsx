@@ -5,7 +5,6 @@ import { AdminComponent } from './components/Admin';
 import { OperadorComponent } from './components/Operador';
 import { CidadaoComponent } from './components/Cidadao';
 import { ProdutorComponent } from './components/Produtor';
-import { CalendarioRotasComponent } from './components/CalendarioRotas';
 import { ReceiptModal } from './components/ReceiptModal';
 import { StatusModal } from './components/StatusModal';
 import { AlertModal } from './components/AlertModal';
@@ -13,7 +12,7 @@ import { AlertModal } from './components/AlertModal';
 export function App() {
   const banco = useAppState();
   const [perfilAtual, setPerfilAtual] = useState('admin');
-  
+
   const [reciboModalOpen, setReciboModalOpen] = useState(false);
   const [transacaoRecibo, setTransacaoRecibo] = useState(null);
 
@@ -25,7 +24,7 @@ export function App() {
   const handleResetar = () => {
     if (window.confirm('Resetar banco de dados simulado?')) {
       appState.resetar();
-      utilitarios.mostrarNotificacao('Dados reinicializados com sucesso!', 'info');
+      utilitarios.mostrarNotificacao('Dados reinicializados com sucesso', 'info');
     }
   };
 
@@ -41,7 +40,6 @@ export function App() {
 
   return (
     <div>
-      {/* Navegação Principal do MVP */}
       <header className="app-header">
         <div className="header-container">
           <a href="#" className="brand-logo">
@@ -66,12 +64,6 @@ export function App() {
               onClick={() => setPerfilAtual('operator')}
             >
               <i className="fa-solid fa-truck-front"></i> PDV Troca
-            </button>
-            <button
-              className={`role-btn ${perfilAtual === 'calendar' ? 'active' : ''}`}
-              onClick={() => setPerfilAtual('calendar')}
-            >
-              <i className="fa-solid fa-calendar-days"></i> Calendário (API)
             </button>
             <button
               className={`role-btn ${perfilAtual === 'citizen' ? 'active' : ''}`}
@@ -111,12 +103,6 @@ export function App() {
             <OperadorComponent
               banco={banco}
               onFinalizarTransacao={handleFinalizarTransacaoOperador}
-            />
-          )}
-          {perfilAtual === 'calendar' && (
-            <CalendarioRotasComponent
-              banco={banco}
-              onReagendar={handleAbrirStatusModal}
             />
           )}
           {perfilAtual === 'citizen' && (

@@ -7,16 +7,17 @@ export function CidadaoComponent({ banco }) {
 
   let simularKgAlimento = 0;
   Object.entries(pesosCalculadora).forEach(([id, val]) => {
+    const numVal = parseFloat(val) || 0;
     const taxa = banco.taxasConversao.find(r => r.id === id);
     if (taxa && taxa.kgPorKgAlimento > 0) {
-      simularKgAlimento += (val / taxa.kgPorKgAlimento);
+      simularKgAlimento += (numVal / taxa.kgPorKgAlimento);
     }
   });
 
   const handleAtualizarSimulacao = (idTaxa, val) => {
     setPesosCalculadora(prev => ({
       ...prev,
-      [idTaxa]: parseFloat(val) || 0
+      [idTaxa]: val === '' ? '' : Math.max(0, parseFloat(val) || 0)
     }));
   };
 
@@ -63,22 +64,45 @@ export function CidadaoComponent({ banco }) {
             <span className="badge badge-success">+{simularKgAlimento.toFixed(1)} kg Alimento</span>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
             {banco.taxasConversao.map(taxa => (
-              <div key={taxa.id}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '2px' }}>
-                  <span><i className={`fa-solid ${taxa.icone}`}></i> {taxa.nome}</span>
-                  <strong>{pesosCalculadora[taxa.id] || 0} {taxa.unidade}</strong>
+              <div
+                key={taxa.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justify: 'space-between',
+                  padding: '10px 12px',
+                  background: 'rgba(15, 23, 42, 0.4)',
+                  borderRadius: 'var(--raio-s)',
+                  border: '1px solid var(--cor-borda)'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--cor-primaria)' }}>
+                    <i className={`fa-solid ${taxa.icone}`}></i>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>{taxa.nome}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--cor-texto-secundario)' }}>
+                      Taxa: {taxa.kgPorKgAlimento} {taxa.unidade} = 1 kg alimento
+                    </div>
+                  </div>
                 </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="30"
-                  step="0.5"
-                  value={pesosCalculadora[taxa.id] || 0}
-                  style={{ width: '100%', accentColor: 'var(--cor-primaria)' }}
-                  onChange={(e) => handleAtualizarSimulacao(taxa.id, e.target.value)}
-                />
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <input
+                    type="number"
+                    className="form-control"
+                    min="0"
+                    step="0.5"
+                    placeholder="0"
+                    value={pesosCalculadora[taxa.id] !== undefined ? pesosCalculadora[taxa.id] : ''}
+                    style={{ width: '90px', textAlign: 'right', fontWeight: 600 }}
+                    onChange={(e) => handleAtualizarSimulacao(taxa.id, e.target.value)}
+                  />
+                  <span style={{ fontSize: '0.85rem', color: 'var(--cor-texto-secundario)', minWidth: '24px' }}>{taxa.unidade}</span>
+                </div>
               </div>
             ))}
           </div>
