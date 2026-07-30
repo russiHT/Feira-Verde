@@ -14,29 +14,25 @@ const perfis = {
   admin: {
     icone: 'fa-chart-line',
     titulo: 'Gestão & Estoque',
-    descricao:
-      'Painel operacional para acompanhar rotas, almoxarifado, validade dos lotes e demandas aos produtores.',
+    descricao: 'Secretaria Municipal de Meio Ambiente',
     aba: 'Gestão'
   },
   operator: {
-    icone: 'fa-truck-front',
+    icone: 'fa-cash-register',
     titulo: 'PDV de Troca',
-    descricao:
-      'Terminal do caminhão para pesar recicláveis, entregar hortifrúti e emitir comprovante digital.',
-    aba: 'PDV'
+    descricao: 'Atendimento em rota',
+    aba: 'PDV Troca'
   },
   citizen: {
-    icone: 'fa-user',
+    icone: 'fa-id-card',
     titulo: 'Área do Cidadão',
-    descricao:
-      'Consulta de saldo, simulação de troca, horários dos caminhões e histórico do munícipe.',
+    descricao: 'Consulta do munícipe',
     aba: 'Cidadão'
   },
   producer: {
-    icone: 'fa-wheat-awn',
-    titulo: 'Produtores & Alertas',
-    descricao:
-      'Portal para atender pedidos urgentes da prefeitura e registrar entregas da agricultura familiar.',
+    icone: 'fa-tractor',
+    titulo: 'Produtores',
+    descricao: 'Agricultura familiar',
     aba: 'Produtores'
   }
 };
@@ -55,7 +51,7 @@ export function App() {
   const [alertModalOpen, setAlertModalOpen] = useState(false);
 
   const handleResetar = () => {
-    if (window.confirm('Resetar o banco de dados simulado? Todo o historico local sera perdido.')) {
+    if (window.confirm('Resetar o banco de dados simulado? Todo o histórico local será perdido.')) {
       appState.resetar();
       utilitarios.mostrarNotificacao('Dados reinicializados.', 'success');
     }
@@ -73,89 +69,89 @@ export function App() {
 
   return (
     <div className="app-shell">
-      <header className="app-header">
-        <div className="header-container">
-          <a href="#" className="brand-logo">
-            <div className="brand-icon">
-              <i className="fa-solid fa-leaf"></i>
-            </div>
-            <div>
-              <div className="brand-title">
-                FeiraVerde <span>Digital</span>
-              </div>
-              <div className="brand-subtitle">Troca de recicláveis por alimentos</div>
-            </div>
-          </a>
-
-          <nav className="role-nav">
-            {Object.entries(perfis).map(([id, item]) => (
-              <button
-                key={id}
-                className={`role-btn ${perfilAtual === id ? 'active' : ''}`}
-                onClick={() => setPerfilAtual(id)}
-              >
-                <i className={`fa-solid ${item.icone}`}></i> {item.aba}
-              </button>
-            ))}
-          </nav>
-
-          <div className="header-actions">
-            <button
-              className="btn btn-secondary btn-sm"
-              onClick={handleResetar}
-              title="Resetar Banco de Dados Simulado"
-            >
-              <i className="fa-solid fa-rotate-left"></i> Resetar
-            </button>
+      <aside className="app-sidebar">
+        <a href="#" className="brand-logo">
+          <div className="brand-icon">
+            <i className="fa-solid fa-leaf"></i>
           </div>
-        </div>
-      </header>
-
-      <main className="main-content">
-        <section className="page-intro">
           <div>
-            <div className="page-kicker">
-              <i className={`fa-solid ${perfil.icone}`}></i>
-              Sistema municipal em operação
-            </div>
+            <div className="brand-title">FeiraVerde Digital</div>
+            <div className="brand-subtitle">Programa municipal</div>
+          </div>
+        </a>
+
+        <nav className="role-nav" aria-label="Módulos do sistema">
+          {Object.entries(perfis).map(([id, item]) => (
+            <button
+              key={id}
+              className={`role-btn ${perfilAtual === id ? 'active' : ''}`}
+              onClick={() => setPerfilAtual(id)}
+            >
+              <i className={`fa-solid ${item.icone}`}></i>
+              <span>{item.aba}</span>
+            </button>
+          ))}
+        </nav>
+
+        <div className="sidebar-footer">
+          <div className="system-chip">
+            <span className="status-dot"></span>
+            Dados locais ativos
+          </div>
+          <button
+            className="btn btn-secondary btn-sm btn-block"
+            onClick={handleResetar}
+            title="Resetar Banco de Dados Simulado"
+          >
+            <i className="fa-solid fa-rotate-left"></i> Resetar base
+          </button>
+        </div>
+      </aside>
+
+      <div className="app-workspace">
+        <header className="topbar">
+          <div>
+            <div className="breadcrumb">FeiraVerde / {perfil.aba}</div>
             <h1>{perfil.titulo}</h1>
             <p>{perfil.descricao}</p>
           </div>
 
-          <div className="page-stats" aria-label="Resumo do sistema">
-            <div className="stat-pill">
+          <div className="topbar-metrics" aria-label="Resumo do sistema">
+            <div>
               <strong>{banco.caminhoes.length}</strong>
-              <span>caminhões</span>
+              <span>Caminhões</span>
             </div>
-            <div className="stat-pill">
+            <div>
               <strong>{banco.cidadaos.length}</strong>
-              <span>munícipes</span>
+              <span>Munícipes</span>
             </div>
-            <div className="stat-pill">
+            <div>
               <strong>{banco.produtos.length}</strong>
-              <span>alimentos</span>
+              <span>Alimentos</span>
             </div>
           </div>
-        </section>
+        </header>
 
-        <div id="view-container">
-          {perfilAtual === 'admin' && (
-            <AdminComponent
-              banco={banco}
-              onAbrirStatusModal={handleAbrirStatusModal}
-              onAbrirAlertModal={() => setAlertModalOpen(true)}
-            />
-          )}
-          {perfilAtual === 'operator' && (
-            <OperadorComponent
-              banco={banco}
-              onFinalizarTransacao={handleFinalizarTransacaoOperador}
-            />
-          )}
-          {perfilAtual === 'citizen' && <CidadaoComponent banco={banco} />}
-          {perfilAtual === 'producer' && <ProdutorComponent banco={banco} />}
-        </div>
-      </main>
+        <main className="main-content">
+          <div id="view-container">
+            {perfilAtual === 'admin' && (
+              <AdminComponent
+                banco={banco}
+                onAbrirStatusModal={handleAbrirStatusModal}
+                onAbrirAlertModal={() => setAlertModalOpen(true)}
+              />
+            )}
+            {perfilAtual === 'operator' && (
+              <OperadorComponent
+                banco={banco}
+                onFinalizarTransacao={handleFinalizarTransacaoOperador}
+              />
+            )}
+            {perfilAtual === 'citizen' && <CidadaoComponent banco={banco} />}
+            {perfilAtual === 'producer' && <ProdutorComponent banco={banco} />}
+          </div>
+        </main>
+      </div>
 
       <ReceiptModal
         isOpen={reciboModalOpen}

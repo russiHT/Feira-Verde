@@ -96,8 +96,8 @@ export function OperadorComponent({ banco, onFinalizarTransacao }) {
       {/* Seletor de Caminhão */}
       <div
         style={{
-          background: 'rgba(16, 185, 129, 0.1)',
-          border: '1px solid var(--cor-borda-destaque)',
+          background: 'var(--cor-fundo-cartao)',
+          border: '1px solid var(--cor-borda)',
           padding: '12px 20px',
           borderRadius: 'var(--raio-m)',
           marginBottom: '20px',
@@ -280,7 +280,7 @@ export function OperadorComponent({ banco, onFinalizarTransacao }) {
             {/* Finalizar */}
             <div
               style={{
-                background: 'rgba(16, 185, 129, 0.1)',
+                background: 'var(--cor-superficie-suave)',
                 border: '1px solid var(--cor-borda-destaque)',
                 padding: '16px',
                 borderRadius: 'var(--raio-m)'

@@ -72,7 +72,7 @@ export function CidadaoComponent({ banco }) {
             <div style={{ fontSize: '0.75rem', color: 'var(--cor-texto-secundario)' }}>Saldo Disponível</div>
             <div
               className="coin-badge"
-              style={{ background: 'linear-gradient(135deg, #10b981, #059669)', fontSize: '1.1rem', padding: '6px 14px' }}
+              style={{ fontSize: '1.1rem', padding: '6px 14px' }}
             >
               <i className="fa-solid fa-basket-shopping"></i> {cidadao.saldoAlimentoKg.toFixed(1)} kg
             </div>
@@ -109,8 +109,8 @@ export function CidadaoComponent({ banco }) {
                     style={{
                       width: '32px',
                       height: '32px',
-                      borderRadius: '50%',
-                      background: 'rgba(16, 185, 129, 0.15)',
+                      borderRadius: 'var(--raio-p)',
+                      background: 'var(--cor-superficie-media)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -149,7 +149,7 @@ export function CidadaoComponent({ banco }) {
 
           <div
             style={{
-              background: 'rgba(16, 185, 129, 0.1)',
+              background: 'var(--cor-superficie-suave)',
               border: '1px solid var(--cor-borda-destaque)',
               padding: '12px',
               borderRadius: 'var(--raio-m)',
@@ -188,7 +188,7 @@ export function CidadaoComponent({ banco }) {
                   <div
                     key={caminhao.id}
                     style={{
-                      background: doBairro ? '#edf8ee' : 'var(--cor-superficie-suave)',
+                      background: doBairro ? '#f0fdf4' : 'var(--cor-superficie-suave)',
                       border: `1px solid ${doBairro ? 'var(--cor-borda-destaque)' : 'var(--cor-borda)'}`,
                       padding: '12px',
                       borderRadius: 'var(--raio-m)'

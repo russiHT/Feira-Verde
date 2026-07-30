@@ -146,9 +146,7 @@ export function ProdutorComponent({ banco }) {
                       className="progress-bar-fill"
                       style={{
                         width: `${pct}%`,
-                        background: concluido
-                          ? 'linear-gradient(90deg, #10b981, #059669)'
-                          : 'linear-gradient(90deg, #f59e0b, #10b981)'
+                        background: concluido ? 'var(--cor-primaria)' : 'var(--cor-destaque)'
                       }}
                     ></div>
                   </div>
