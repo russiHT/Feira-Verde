@@ -158,7 +158,7 @@ export function OperadorComponent({ banco, onFinalizarTransacao }) {
 
             <div
               style={{
-                background: 'rgba(15, 23, 42, 0.6)',
+                background: 'var(--cor-superficie-suave)',
                 padding: '10px 14px',
                 borderRadius: 'var(--raio-p)',
                 display: 'flex',
@@ -187,7 +187,7 @@ export function OperadorComponent({ banco, onFinalizarTransacao }) {
                 <div
                   key={material.id}
                   style={{
-                    background: 'rgba(15,23,42,0.6)',
+                    background: 'var(--cor-superficie-suave)',
                     border: '1px solid var(--cor-borda)',
                     padding: '10px',
                     borderRadius: 'var(--raio-p)'
@@ -243,7 +243,7 @@ export function OperadorComponent({ banco, onFinalizarTransacao }) {
                     <div
                       key={produto.id}
                       style={{
-                        background: 'rgba(15, 23, 42, 0.6)',
+                        background: 'var(--cor-superficie-suave)',
                         border: '1px solid var(--cor-borda)',
                         padding: '10px 14px',
                         borderRadius: 'var(--raio-p)',

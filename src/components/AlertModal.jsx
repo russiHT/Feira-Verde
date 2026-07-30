@@ -85,7 +85,6 @@ export function AlertModal({ isOpen, onClose, banco }) {
           </button>
           <button
             className="btn btn-warning"
-            style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#fff' }}
             onClick={handleDisparar}
           >
             <i className="fa-solid fa-paper-plane"></i> Disparar Demanda

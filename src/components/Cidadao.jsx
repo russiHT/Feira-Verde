@@ -99,8 +99,8 @@ export function CidadaoComponent({ banco }) {
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   padding: '10px 12px',
-                  background: 'rgba(15, 23, 42, 0.4)',
-                  borderRadius: 'var(--raio-s)',
+                  background: 'var(--cor-superficie-suave)',
+                  borderRadius: 'var(--raio-p)',
                   border: '1px solid var(--cor-borda)'
                 }}
               >
@@ -188,7 +188,7 @@ export function CidadaoComponent({ banco }) {
                   <div
                     key={caminhao.id}
                     style={{
-                      background: doBairro ? 'rgba(16, 185, 129, 0.12)' : 'rgba(15, 23, 42, 0.6)',
+                      background: doBairro ? '#edf8ee' : 'var(--cor-superficie-suave)',
                       border: `1px solid ${doBairro ? 'var(--cor-borda-destaque)' : 'var(--cor-borda)'}`,
                       padding: '12px',
                       borderRadius: 'var(--raio-m)'

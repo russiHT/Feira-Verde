@@ -117,7 +117,7 @@ export function ProdutorComponent({ banco }) {
                 <div
                   key={demanda.id}
                   style={{
-                    background: 'rgba(15, 23, 42, 0.6)',
+                    background: 'var(--cor-superficie-suave)',
                     padding: '12px',
                     borderRadius: 'var(--raio-p)',
                     border: '1px solid var(--cor-borda)'
